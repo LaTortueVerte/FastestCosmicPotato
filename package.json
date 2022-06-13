@@ -10,6 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "fontfaceobserver": "^2.3.0",
+    "pixi-pixelate": "^0.4.3",
     "pixi.js": "^6.4.2"
   }
 }

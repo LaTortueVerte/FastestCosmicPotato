@@ -1,198 +1,157 @@
+import {create_button, create_text, Stat, SpaceShip, Info, Steering_wheel, Map, Background, bringToFront} from './sources/functions.js';
+
+//-----------------------------------------------------------------------------------------------------
+// INIT game screen
+//-----------------------------------------------------------------------------------------------------
+
 const Application = PIXI.Application;
-
-const app = new Application({
-    width: 500,
-    height: 500,
-    transparent: false,
-    antialias: true
-});
-
-app.renderer.backgroundColor = 0x23395D;
-app.renderer.resize(window.innerWidth, window.innerHeight);
-app.renderer.view.style.position = 'absolute';
-
-document.body.appendChild(app.view);
-
-
-
-//  Create rectangle
-
 const Graphics = PIXI.Graphics;
 
-const rectangle = new Graphics();
-rectangle.beginFill(0xAA33BB);
-rectangle.lineStyle(4, 0xFFEA00, 1);
-rectangle.drawRect(200, 200, 100, 120);
-rectangle.endFill();
-
-app.stage.addChild(rectangle);
-
-// Create polygon
-
-const poly = new Graphics();
-poly.beginFill(0xFF66FF);
-poly.lineStyle(4, 0xFFEA00, 1);
-poly.drawPolygon([
-        600, 50,
-        800, 150,
-        900, 300,
-        400, 400
-])
-poly.endFill;
-
-app.stage.addChild(poly);
-
-
-// Create circle 
-
-const circle = new Graphics();
-circle.beginFill(0x22AACC);
-circle.drawCircle(440, 200, 80);
-circle.endFill();
-
-app.stage.addChild(circle);
-
-// Create line
-
-const line = new Graphics();
-line.lineStyle(5, 0xFFEA00, 1);
-line.moveTo(1500, 100);
-line.lineTo(1500, 800);
-line.endFill();
-
-app.stage.addChild(line);
-
-// Create Text
-
-const style = new PIXI.TextStyle({
-    fontFamily: 'Montserrat',
-    fontSize: 48,
-    fill: 'deepskyblue',
-    stroke: "#ffffff",
-    strokeThickness: 4,
-    dropShadow: true,
-    dropShadowDistance: 10,
-    dropShadowAngle : Math.PI / 2,
-    dropShadowBlur: 4,
-    dropShadowColor : "#000000"
+const app = new Application({
+    transparent: false,
+    antialias: true,
+    resizeTo: window
 });
 
-const myText = new PIXI.Text('Hello World!', style);
+PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
 
-app.stage.addChild(myText);
+app.renderer.backgroundColor = 0x001E4D; //2B2B54 - 23395D
+app.renderer.resize(window.innerWidth, window.innerHeight);
+app.renderer.view.style.position = 'absolute';
+document.body.appendChild(app.view);
 
-myText.text = 'Text Changed!';
-
-// Create Ticker
-
-/*
-app.ticker.add(delta => loop(delta));
-
-function loop(delta){
-    const rect = new Graphics();
-    rect.beginFill(0xFFFFFF)
-    .drawRect(Math.random() * app.screen.width, Math.random() * app.screen.height, 10, 10)
-    .endFill();
-
-    app.stage.addChild(rect);
-
-}*/
-
-// Import Image
-
-//const char1Texture = PIXI.Texture.from('../images/1.gif');
-//const char1Sprite = new PIXI.Sprite(char1Texture);
-const char1Sprite = new PIXI.Sprite.from('../images/1.gif');
-app.stage.addChild(char1Sprite);
-
-//char1Sprite.width = 500;
-//char1Sprite.height = 500;
-
-//char1Sprite.scale.x = 1.5;
-//char1Sprite.scale.y = 2;
-char1Sprite.scale.set(2, 2);
-
-//char1Sprite.x = 200;
-//char1Sprite.y = 500;
-char1Sprite.position.set(2,400);
-
-//char1Sprite.anchor.x = 0.5;
-//char1Sprite.anchor.y = 0.5;
-char1Sprite.anchor.set(0.5, 0.5);
-
-app.ticker.add(delta => loop(delta));
-
-function loop(delta){
-    char1Sprite.x += 1;
-    char1Sprite.rotation += 0.1;
+window.onresize = function(){ 
+    window.location.href = "./index.php"; // redirect to itself = reload page
 }
 
-// keyboard and mouse event
+//-----------------------------------------------------------------------------------------------------
+// OBJECTS
+//-----------------------------------------------------------------------------------------------------
 
-const char2Sprite = new PIXI.Sprite.from('../images/2.PNG');
-app.stage.addChild(char2Sprite);
+// Global --------------------------------------------------------------------------------
 
-char2Sprite.position.set(200,600);
-char2Sprite.anchor.set(0.5, 0.5);
+const pixel_size = Math.floor(window.innerWidth/400);
 
-char2Sprite.interactive = true;
-char2Sprite.buttonMode = true;
+// Background -----------------------------------------------------------------------------
 
-char2Sprite.on('pointerdown', function(){
-    char2Sprite.scale.x += 0.1;
-    char2Sprite.scale.y += 0.1;
+const background = new Background(app, pixel_size);
+
+// Info ------------------------------------------------------------------------------------
+
+var info = new Info(app, pixel_size);
+
+// Spaceship -----------------------------------------------------------------------------
+
+var spaceship_shape = [ [2,1,1,1,0],
+                        [0,0,1,1,1],
+                        [2,1,1,1,0]];
+
+var spaceship = new SpaceShip(app, spaceship_shape, pixel_size, Graphics);
+
+app.ticker.add(function() { // background in function direction - to change
+    background.background_sprite.tilePosition.x -= pixel_size / 4 * Math.cos(spaceship.spaceship_container.rotation);
+    background.background_sprite.tilePosition.y -= pixel_size / 4 * Math.sin(spaceship.spaceship_container.rotation);
 });
 
+// Engine_button -------------------------------------------------------------------------
 
-document.addEventListener('keydown', function(e){
-    if (e.key === 'ArrowRight')
-        char2Sprite.scale.x -= 0.1;
-        char2Sprite.scale.y -= 0.1;
-});
+function create_sparks(){
+    spaceship.engine_status = !spaceship.engine_status;
+}
+var sEngine_Button = create_button(app, pixel_size, create_sparks, window.innerWidth * 0.05, pixel_size * 200, "dashboard/sEngineButton_", 6);
 
-// container
+// Steering_Wheel ------------------------------------------------------------------------
 
-const container = new PIXI.Container();
+var steering_wheel = new Steering_wheel(app, pixel_size, window.innerWidth * 0.17, pixel_size * 208);
+spaceship.bind_steering_wheel(steering_wheel);
 
-const char3Sprite = new PIXI.Sprite.from('../images/3.png');
-container.addChild(char3Sprite);
+// Common Button 1 -------------------------------------------------------------------------
 
-const char4Sprite = new PIXI.Sprite.from('../images/4.png');
-container.addChild(char4Sprite);
+// Logout 
+function log_out(){
+    window.location.href = "./logout.php";
+}
+var Log_out_Button_sprite = create_button(app, pixel_size, log_out, window.innerWidth * 0.025, window.innerHeight * 0.05, "dashboard/sCommonButton_", 4);
 
-app.stage.addChild(container);
+var Log_out_Button_text = create_text(app, pixel_size, Log_out_Button_sprite.x + window.innerWidth * 0.04, Log_out_Button_sprite.y + window.innerHeight * 0.02, "dashboard/logout_text", 0, 0);
 
-console.log(container.width, container.height);
-container.pivot.set(container.width / 2, container.height / 2);
-console.log(container.pivot);
-container.position.set(500,500);
+// Account settings
+function account_settings(){
+    // access to account settings
+}
+var Account_Settings_Button_sprite = create_button(app, pixel_size, account_settings, window.innerWidth * 0.025, Log_out_Button_sprite.y + 16 * pixel_size + window.innerHeight * 0.01, "dashboard/sCommonButton_", 4);
 
-app.ticker.add(delta => loop2(delta));
+var Account_Settings_Button_text = create_text(app, pixel_size, Account_Settings_Button_sprite.x + window.innerWidth * 0.04, Account_Settings_Button_sprite.y + window.innerHeight * 0.02, "dashboard/account_settings_text", 0, 0);
 
-function loop2(delta){
-    container.rotation -= 0.05;
+// Info button ------------------------------------------------------------------------
+
+function toggle_info(){
+    if (info.active){
+        info.hide();
+        spaceship.show();
+        app.stage.addChild(Log_out_Button_sprite);
+        app.stage.addChild(Account_Settings_Button_sprite);
+        app.stage.addChild(Log_out_Button_text);
+        app.stage.addChild(Account_Settings_Button_text);
+    }
+    else{
+        info.show();
+        spaceship.hide();
+        app.stage.removeChild(Log_out_Button_sprite);
+        app.stage.removeChild(Account_Settings_Button_sprite);
+        app.stage.removeChild(Log_out_Button_text);
+        app.stage.removeChild(Account_Settings_Button_text);
+    }
 }
 
-// particule Container
-/*
-const particuleContainer = new PIXI.ParticuleContainer(1000, {
-    position : true,
-    rotation : true,
-    vertices : true,
-    tint : true,
-    uvs : true
-});
+var Info_Button_sprite = create_button(app, pixel_size, toggle_info, window.innerWidth * 0.84, pixel_size * 204, "dashboard/sCommonButton_", 4);
 
-const loader = PIXI.loader.shared;
+var info_text = create_text(app, pixel_size, window.innerWidth * 0.84, pixel_size * 192, "dashboard/info_text", 0, 0);
 
-loader.add('char5Texture', '../images/4.png');
+// Stat Bar -------------------------------------------------------------------------------
 
-loader.load(setup);
+var stat = new Stat(app, pixel_size, 5, window.innerWidth - 150 * pixel_size, pixel_size * 19);
 
-fucntion setup(loader, ressources){
-    const char5Sprite = new PIXI.Sprite(
-        ressources.char5Texture.tecture
-    );
-    char5Sprite. y = 400;
-    app.stage.addChild(char5Sprite);
-}*/
+// Map -------------------------------------------------------------------------------------------
+
+var map = new Map(app, Graphics, pixel_size);
+
+var sMinimap_Button = null;
+function toggle_map(){
+    map.active = !map.active;
+    background.toggle();
+    if (map.active){
+        map.show();
+        if (info.active == true){
+            toggle_info();
+        }
+        app.stage.removeChild(stat.Stat_container);
+        app.stage.removeChild(Info_Button_sprite);
+        app.stage.removeChild(info_text);
+        
+    }
+    else{
+        map.hide();
+        app.stage.addChild(stat.Stat_container);
+        app.stage.addChild(Info_Button_sprite);
+        app.stage.addChild(info_text);
+    }
+    spaceship.toggle_sprite();
+    bringToFront(Log_out_Button_sprite);
+    bringToFront(Log_out_Button_text);
+    bringToFront(Account_Settings_Button_sprite);
+    bringToFront(Account_Settings_Button_text);
+    bringToFront(sEngine_Button);
+    bringToFront(steering_wheel.Steering_wheel_sprite);
+    bringToFront(sMinimap_Button);
+}
+sMinimap_Button = create_button(app, pixel_size, toggle_map, window.innerWidth * 0.9, pixel_size * 190, "dashboard/minimap_button_", 3);
+
+//-----------------------------------------------------------------------------------------------------
+// All Updates
+//-----------------------------------------------------------------------------------------------------
+
+function update(){
+    spaceship.update()
+}
+setInterval(update, 10);
