@@ -14,8 +14,3 @@ https://developer.mozilla.org/fr/docs/Web/JavaScript/Reference/Classes
 
 Buttons pixel art :
 https://www.youtube.com/watch?v=r_yjgSZ9i7s&t=381s
-
-
-FontFaceObserver installation : 
-commands :
-npm install fontfaceobserver --save
