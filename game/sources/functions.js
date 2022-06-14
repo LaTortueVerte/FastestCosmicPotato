@@ -148,7 +148,7 @@ export class SpaceShip {
         app.stage.addChild(this.spaceship_container);
 
         this.mini_spaceship_sprite.anchor.set(0.5, 0.5);
-        this.mini_spaceship_sprite.position.set(window.innerWidth/2, window.innerHeight/2);
+        this.mini_spaceship_sprite.position.set(window.innerWidth/2, pixel_size * 120);
         this.mini_spaceship_sprite.scale.set(pixel_size, pixel_size);
 
         // Steering wheel
@@ -585,7 +585,7 @@ export class Info {
 // Map -----------------------------------------------------------------------------------------------------------------------------------
 
 class Pixelated_Circle {
-    constructor(Graphic, parent, x, y, r){
+    constructor(Graphics, parent, x, y, r, color){
         this.x = x;
         this.y = y;
         this.r = Math.floor(r + r%2); // even number
@@ -605,18 +605,27 @@ class Pixelated_Circle {
 
         var drawY = r;
         var drawX = 0;
-        console.log(drawX, drawY);
         while (drawY != 0){
             while (distance(0, 0, drawX, drawY-1) < r){
                 drawX++;
             }
+            if ((distance(0, 0, drawX, drawY-1) >= r) && (drawY > 0)){
+                list.push([drawX, drawY]);
+                console.log(drawX, drawY);
+            }
             while ((distance(0, 0, drawX, drawY-1) >= r) && (drawY > 0)){
                 drawY--;
             }
-            list.push([drawX, drawY]);
-            console.log(drawX, drawY);
         }
+
+        for (var i = 0 ; i < list.length ; i++){
+            const rect = new Graphics();
+            rect.beginFill(0xFFFFFF); //color
+            rect.drawRect(x-list[i][0], y-list[i][1], list[i][0] * 2, list[i][1] * 2);
+            rect.endFill();
         
+            this.parent.addChild(rect);
+        }
     }
 }
 
@@ -642,7 +651,7 @@ export class Map {
         }
         */
 
-        var test = new Pixelated_Circle(Graphics, this.map_container, 50, 50, 100);
+        var test = new Pixelated_Circle(Graphics, this.map_container, 300, 300, 10);
     }
 
     show(){
