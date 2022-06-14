@@ -56,6 +56,22 @@ export function bringToFront(object) {
     }
 }
 
+function getRandomColor() {
+    var letters_1 = '0123456789ABCDEF';
+    var letters_2 = '2345678';
+    var color = '0x';
+    for (var i = 0; i < 6; i++) {
+        if (i%2==0){
+            color += letters_2[Math.floor(Math.random() * 7)];
+        }
+        else{
+            color += letters_1[Math.floor(Math.random() * 16)];
+        }
+      
+    }
+    return color;
+  }
+
 // --------------------------------------------------------------------------------------------------------------------------------------
 // OBJECTS
 // --------------------------------------------------------------------------------------------------------------------------------------
@@ -585,7 +601,7 @@ export class Info {
 // Map -----------------------------------------------------------------------------------------------------------------------------------
 
 class Pixelated_Circle {
-    constructor(Graphics, parent, x, y, r, color){
+    constructor(Graphics, pixel_size, parent, x, y, r, color){
         this.x = x;
         this.y = y;
         this.r = Math.floor(r + r%2); // even number
@@ -611,7 +627,6 @@ class Pixelated_Circle {
             }
             if ((distance(0, 0, drawX, drawY-1) >= r) && (drawY > 0)){
                 list.push([drawX, drawY]);
-                console.log(drawX, drawY);
             }
             while ((distance(0, 0, drawX, drawY-1) >= r) && (drawY > 0)){
                 drawY--;
@@ -620,12 +635,23 @@ class Pixelated_Circle {
 
         for (var i = 0 ; i < list.length ; i++){
             const rect = new Graphics();
-            rect.beginFill(0xFFFFFF); //color
-            rect.drawRect(x-list[i][0], y-list[i][1], list[i][0] * 2, list[i][1] * 2);
+            rect.beginFill(color);
+            rect.drawRect((r - list[i][0]) * pixel_size, (r - list[i][1]) * pixel_size, list[i][0] * 2 * pixel_size, list[i][1] * 2 * pixel_size);
             rect.endFill();
-        
-            this.parent.addChild(rect);
+
+            /*
+            const rect = new Graphics();
+            rect.beginFill(color);
+            rect.drawRect(x-list[i][0], y-list[i][1], list[i][0] * 2 * pixel_size, list[i][1] * 2 * pixel_size);
+            rect.endFill();*/
+
+            this.circle_container.addChild(rect);
         }
+
+        this.circle_container.pivot.set(this.circle_container.width / 2, this.circle_container.height / 2);
+        this.circle_container.position.set(x, y);
+        //this.circle_container.scale.set(pixel_size, pixel_size);
+        this.parent.addChild(this.circle_container);
     }
 }
 
@@ -651,7 +677,9 @@ export class Map {
         }
         */
 
-        var test = new Pixelated_Circle(Graphics, this.map_container, 300, 300, 10);
+        var planet_1 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 200 * pixel_size, 200 * pixel_size, 30, getRandomColor());
+        var planet_2 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 50 * pixel_size, 50 * pixel_size, 10, getRandomColor());
+        var planet_3 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 400 * pixel_size, 250 * pixel_size, 100, getRandomColor());
     }
 
     show(){
