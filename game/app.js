@@ -1,4 +1,4 @@
-import {create_button, create_text, Stat, SpaceShip, Info, Steering_wheel, Map, Background, bringToFront} from './sources/functions.js';
+import {create_button, create_text, Stat, SpaceShip, Info, Steering_wheel, Map, Background, bringToFront, Find_Slot_Bar} from './sources/functions.js';
 
 //-----------------------------------------------------------------------------------------------------
 // INIT game screen
@@ -53,10 +53,25 @@ app.ticker.add(function() { // background in function direction - to change
     background.background_sprite.tilePosition.y -= pixel_size / 4 * Math.sin(spaceship.spaceship_container.rotation);
 });
 
+// Find slot -----------------------------------------------------------------------------
+
+var number_of_find_slot = 3;
+var find_slot_bar = new Find_Slot_Bar(app.stage, number_of_find_slot, pixel_size);
+
+
 // Engine_button -------------------------------------------------------------------------
 
 function create_sparks(){
     spaceship.engine_status = !spaceship.engine_status;
+    if (spaceship.engine_status){
+        console.log("added");
+        spaceship.mini_spaceship_container.addChild(spaceship.mini_spaceship_flame);
+    }
+    else
+    {
+        spaceship.mini_spaceship_container.removeChild(spaceship.mini_spaceship_flame);
+        console.log("removed");
+    }
 }
 var sEngine_Button = create_button(app, pixel_size, create_sparks, window.innerWidth * 0.05, pixel_size * 200, "dashboard/sEngineButton_", 6);
 
@@ -125,6 +140,7 @@ function toggle_map(){
         if (info.active == true){
             toggle_info();
         }
+        find_slot_bar.hide();
         app.stage.removeChild(stat.Stat_container);
         app.stage.removeChild(Info_Button_sprite);
         app.stage.removeChild(info_text);
@@ -132,6 +148,7 @@ function toggle_map(){
     }
     else{
         map.hide();
+        find_slot_bar.show();
         app.stage.addChild(stat.Stat_container);
         app.stage.addChild(Info_Button_sprite);
         app.stage.addChild(info_text);

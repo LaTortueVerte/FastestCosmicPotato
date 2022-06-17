@@ -133,13 +133,24 @@ export class SpaceShip {
         this.pixel_size = pixel_size;
         this.reactors = new Array();
 
-        // Spaceship_container
+        // Mini_Spaceship_container
 
         this.slot_size = 24;
+        
+        this.mini_spaceship_flame = PIXI.Sprite.from('../images/spaceship/flame.png');
+        this.mini_spaceship_flame.position.set(0, 1);
+        this.mini_spaceship_sprite = PIXI.Sprite.from('../images/spaceship/spaceship.png');
+        this.mini_spaceship_sprite.position.set(9, -1);
+        this.mini_spaceship_container = new PIXI.Container();
+        this.mini_spaceship_container.addChild(this.mini_spaceship_sprite);
+
+        this.mini_spaceship_container.pivot.set(12, 5);
+        this.mini_spaceship_container.position.set(window.innerWidth/2, pixel_size * 120);
+        this.mini_spaceship_container.scale.set(pixel_size, pixel_size);
+
+        // Spaceship_container
 
         this.spaceship_container = new PIXI.Container();
-        this.mini_spaceship_sprite = PIXI.Sprite.from('../images/spaceship/spaceship.png');
-
         const newSlot_texture = PIXI.Texture.from('../images/spaceship/slot.png');
         const newReactor_texture = PIXI.Texture.from('../images/spaceship/reactor.png');
     
@@ -162,10 +173,6 @@ export class SpaceShip {
         this.spaceship_container.position.set(pixel_size * 200, pixel_size * 120);
         this.spaceship_container.scale.set(pixel_size, pixel_size);
         app.stage.addChild(this.spaceship_container);
-
-        this.mini_spaceship_sprite.anchor.set(0.5, 0.5);
-        this.mini_spaceship_sprite.position.set(window.innerWidth/2, pixel_size * 120);
-        this.mini_spaceship_sprite.scale.set(pixel_size, pixel_size);
 
         // Steering wheel
 
@@ -239,10 +246,10 @@ export class SpaceShip {
         this.is_on_map_mode = !this.is_on_map_mode;
         if (this.is_on_map_mode){
             this.app.stage.removeChild(this.spaceship_container);
-            this.app.stage.addChild(this.mini_spaceship_sprite);
+            this.app.stage.addChild(this.mini_spaceship_container);
         }
         else{
-            this.app.stage.removeChild(this.mini_spaceship_sprite);
+            this.app.stage.removeChild(this.mini_spaceship_container);
             this.app.stage.addChild(this.spaceship_container);
         } 
     }
@@ -280,7 +287,7 @@ export class SpaceShip {
             }
         }
         this.spaceship_container.rotation += this.spaceship_rotation_speed;
-        this.mini_spaceship_sprite.rotation += this.spaceship_rotation_speed;
+        this.mini_spaceship_container.rotation += this.spaceship_rotation_speed;
         if (this.steering_wheel != null){
             this.steering_wheel.Steering_wheel_sprite.rotation = this.spaceship_rotation_speed * 50;
         }
@@ -291,6 +298,36 @@ export class SpaceShip {
         
     }
 
+}
+
+export class Find_Slot_Bar {
+    constructor(parent, number_of_slot, pixel_size){
+        this.slot_size = 24;
+        this.parent = parent;
+        this.number_of_slot = number_of_slot;
+
+        this.find_slot_bar_container = new PIXI.Container();
+        const newSlot_texture = PIXI.Texture.from('../images/spaceship/slot_2.png');
+        
+        for (var i = 0 ; i < number_of_slot ; i++){
+            const newSlot = new PIXI.Sprite(newSlot_texture);
+            newSlot.position.set((i * this.slot_size + 200), 200);
+            this.find_slot_bar_container.addChild(newSlot);
+        }
+
+        this.find_slot_bar_container.scale.set(pixel_size, pixel_size);
+        this.parent.addChild(this.find_slot_bar_container);
+
+        
+    }
+
+    show(){
+        this.parent.addChild(this.find_slot_bar_container);
+    }
+
+    hide(){
+        this.parent.removeChild(this.find_slot_bar_container);
+    }
 }
 
 class Reactor_spark{
@@ -673,22 +710,32 @@ export class Map {
             circle.beginFill(0x22AACC);
             circle.drawCircle(this.Objects_array[i][0] * pixel_size, this.Objects_array[i][1] * pixel_size, this.Objects_array[i][2] * pixel_size);
             circle.endFill();
-
         }
         */
 
         var planet_1 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 200 * pixel_size, 200 * pixel_size, 30, getRandomColor());
         var planet_2 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 50 * pixel_size, 50 * pixel_size, 10, getRandomColor());
         var planet_3 = new Pixelated_Circle(Graphics, pixel_size, this.map_container, 400 * pixel_size, 250 * pixel_size, 100, getRandomColor());
+
+        // cache
+
+        this.cache_rect = new Graphics();
+        this.cache_rect.beginFill(0x18213B);
+        this.cache_rect.drawRect(0, pixel_size * 232, window.innerWidth, window.innerHeight - pixel_size * 210);
+        this.cache_rect.endFill();
+
+        
     }
 
     show(){
         this.app.stage.addChild(this.map_container);
+        this.app.stage.addChild(this.cache_rect);
         this.active = true;
     }
 
     hide(){
         this.app.stage.removeChild(this.map_container);
+        this.app.stage.removeChild(this.cache_rect);
         this.active = false;
     }
 }

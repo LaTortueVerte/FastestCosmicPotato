@@ -1,5 +1,5 @@
 <?php
-    $DB_SERVER =  'localhost';
+    $DB_SERVER =  'localhost:3307'; //'localhost:3307' or 'localhost'
     $DB_USERNAME = 'root';
     $DB_PASSWORD =  '';
     $DB_NAME = 'game_fastestcosmicpotato';
