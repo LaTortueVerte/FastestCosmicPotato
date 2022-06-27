@@ -1,4 +1,18 @@
-import {create_button, create_text, Stat, SpaceShip, Info, Steering_wheel, Map, Background, bringToFront, Find_Slot_Bar} from './sources/functions.js';
+import {    Mouse_slot, 
+            create_button, 
+            create_text, 
+            Stat, 
+            Item, 
+            SpaceShip, 
+            Info, 
+            Steering_wheel, 
+            Map, 
+            Background, 
+            bringToFront, 
+            Game, 
+            Action_Item } 
+
+from './sources/functions.js';
 
 //-----------------------------------------------------------------------------------------------------
 // INIT game screen
@@ -30,7 +44,12 @@ window.onresize = function(){
 
 // Global --------------------------------------------------------------------------------
 
+var game = new Game();
 const pixel_size = Math.floor(window.innerWidth/400);
+
+// Mouse slot -----------------------------------------------------------------------------
+
+var mouse_pt = new Mouse_slot(app, pixel_size);
 
 // Background -----------------------------------------------------------------------------
 
@@ -46,18 +65,30 @@ var spaceship_shape = [ [2,1,1,1,0],
                         [0,0,1,1,1],
                         [2,1,1,1,0]];
 
-var spaceship = new SpaceShip(app, spaceship_shape, pixel_size, Graphics);
+var spaceship = new SpaceShip(game, app, spaceship_shape, pixel_size, Graphics);
 
 app.ticker.add(function() { // background in function direction - to change
     background.background_sprite.tilePosition.x -= pixel_size / 4 * Math.cos(spaceship.spaceship_container.rotation);
     background.background_sprite.tilePosition.y -= pixel_size / 4 * Math.sin(spaceship.spaceship_container.rotation);
 });
 
-// Find slot -----------------------------------------------------------------------------
+// Item -----------------------------------------------------------------------------------
 
-var number_of_find_slot = 3;
-var find_slot_bar = new Find_Slot_Bar(app.stage, number_of_find_slot, pixel_size);
+var item_1 = new Item(app, 1, spaceship.slot_size, mouse_pt, pixel_size);
+spaceship.slots[0].add_item(item_1);
 
+var item_2 = new Item(app, 2, spaceship.slot_size, mouse_pt, pixel_size);
+spaceship.slots[1].add_item(item_2);
+
+var item_3 = new Item(app, 3, spaceship.slot_size, mouse_pt, pixel_size);
+spaceship.slots[2].add_item(item_3);
+
+var item_4 = new Item(app, 4, spaceship.slot_size, mouse_pt, pixel_size);
+spaceship.slots[3].add_item(item_4);
+
+// Actin_item -----------------------------------------------------------------------------
+
+var trash = new Action_Item(app.stage, "../images/items/trash.png", 200 * pixel_size, 210 * pixel_size, null, pixel_size);
 
 // Engine_button -------------------------------------------------------------------------
 
@@ -140,7 +171,6 @@ function toggle_map(){
         if (info.active == true){
             toggle_info();
         }
-        find_slot_bar.hide();
         app.stage.removeChild(stat.Stat_container);
         app.stage.removeChild(Info_Button_sprite);
         app.stage.removeChild(info_text);
@@ -148,7 +178,6 @@ function toggle_map(){
     }
     else{
         map.hide();
-        find_slot_bar.show();
         app.stage.addChild(stat.Stat_container);
         app.stage.addChild(Info_Button_sprite);
         app.stage.addChild(info_text);

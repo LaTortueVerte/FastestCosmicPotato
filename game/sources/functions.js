@@ -76,6 +76,48 @@ function getRandomColor() {
 // OBJECTS
 // --------------------------------------------------------------------------------------------------------------------------------------
 
+// Mouse_slot ------------------------------------------------------------------------------------------------------------------------------
+
+export class Mouse_slot{
+    constructor(app, pixel_size){
+        this.mouse_slot_container = new PIXI.Container();
+        this.mouse_slot_container.pivot.set(8, 8);
+        this.mouse_slot_container.scale.set(pixel_size);
+        this.app = app;
+        this.isEmpty = true;
+
+        var this_obj = this;
+
+        function getMousePosition() {
+            return app.renderer.plugins.interaction.mouse.global;
+        }
+        
+        function follow_mouse(delta){
+            let mousePosition = getMousePosition();
+            this_obj.mouse_slot_container.x = mousePosition.x;
+            this_obj.mouse_slot_container.y = mousePosition.y;
+        }
+
+        app.ticker.add(delta => follow_mouse(delta));
+
+        this.item_sprite = null;
+    }
+
+    add_item(item_sprite){
+        this.item_sprite = item_sprite;
+        this.mouse_slot_container.addChild(item_sprite);
+        this.app.stage.addChild(this.mouse_slot_container);
+        this.isEmpty = false;
+    }
+
+    remove_item(){
+        this.mouse_slot_container.removeChild(this.item_sprite);
+        this.item_sprite = null;
+        this.app.stage.removeChild(this.mouse_slot_container);
+        this.isEmpty = true;
+    }
+}
+
 // Background ---------------------------------------------------------------------------------------------------------------------------
 
 export class Background {
@@ -110,16 +152,186 @@ export class Background {
     }
 }
 
+// Inventory ----------------------------------------------------------------------------------------------------------------------------
+
+export class Item{
+    constructor(app, item_id, slot_size, mouse_pt, pixel_size){
+        this.slot_size = slot_size;
+        this.item_size = 16;
+        this.parent_slot = null;
+        this.mouse_pt = mouse_pt;
+        this.is_following_mouse = false;
+
+        // Sprite
+
+        var image = "";
+
+        switch (item_id){
+            case 1: image = '../images/items/fuel.png'; break;      // fuel
+            case 2: image = '../images/items/potato.png'; break;    // potato
+            case 3: image = '../images/items/tools.png'; break;     // tools
+            default: image = '../images/items/potato.png'; break;
+        }
+
+        this.item_sprite = PIXI.Sprite.from(image);
+        this.item_sprite.anchor.set(0.5);
+        this.item_sprite.position.set(this.slot_size / 2 );
+        
+        // Drag Interaction
+
+        this.item_sprite.interactive = true;
+        this.item_sprite.buttonMode = true;
+
+        var this_obj = this;
+
+        this.item_sprite.on('pointerdown', function(){ // mouse over sprite
+            console.log("clic");
+            if (this_obj.parent_slot != null){
+                mouse_pt.dragged_item = this;
+
+                this_obj.is_following_mouse = !this_obj.is_following_mouse;
+                if (this_obj.is_following_mouse){
+                    console.log("following");
+                    this_obj.parent_slot.hide_item();
+                    this_obj.mouse_pt.add_item(this_obj.item_sprite);
+                }
+                else{
+                    console.log("not following");
+                    this_obj.parent_slot.show_item();
+                    this_obj.mouse_pt.remove_item();
+                }
+            }
+        });
+
+        // Over Animation
+
+        var mouse_is_over = false;
+
+        this.item_sprite.on('mouseover', function(){ // mouse over sprite
+            //console.log("over");
+            if (this_obj.parent_slot != null){
+                if (!mouse_is_over){
+                    this_obj.item_sprite.scale.x += 0.5;
+                    this_obj.item_sprite.scale.y += 0.5;
+                    mouse_is_over = true;
+                }
+            }
+        });
+
+        this.item_sprite.on('pointerout', function(){ // mouse not over sprite
+            //console.log("not over");
+            if (this_obj.parent_slot != null){
+                if (mouse_is_over){
+                    this_obj.item_sprite.scale.x -= 0.5;
+                    this_obj.item_sprite.scale.y -= 0.5;
+                    mouse_is_over = false;
+                }
+            }
+        });
+    }
+}
+
+export class Action_Item{
+    constructor(parent, image, x, y, action, pixel_size, mouse_pt){
+
+        this.mouse_pt = mouse_pt;
+
+        // Sprite 
+
+        this.action_item_sprite = PIXI.Sprite.from(image);
+
+        this.action_item_sprite.anchor.set(0.5);
+        this.action_item_sprite.position.set(x,y);
+        this.action_item_sprite.scale.set(pixel_size);
+
+        parent.addChild(this.action_item_sprite);
+
+        this.action_item_sprite.interactive = true;
+        this.action_item_sprite.buttonMode = true;
+
+        var tmp = this.action_item_sprite;
+
+        this.action_item_sprite.on('pointerdown', function(){ // mouse clic on sprite
+            console.log("clic");
+            // action();
+        });
+    
+        this.action_item_sprite.on('mouseover', function(){ // mouse over sprite
+            console.log("over");
+            tmp.scale.x += 0.5;
+            tmp.scale.y += 0.5;
+        });
+
+        this.action_item_sprite.on('pointerout', function(){ // mouse not over sprite
+            console.log("not over");
+            tmp.scale.x -= 0.5;
+            tmp.scale.y -= 0.5;
+        });
+
+        
+    }
+
+    show(){
+        parent.addChild(this.action_item_sprite);
+    }
+
+    hide(){
+        parent.removeChild(this.action_item_sprite);
+    }
+
+
+}
+
 // Spaceship ----------------------------------------------------------------------------------------------------------------------------
 
+class Slot{
+    constructor(parent, x, y, slot_texture){
+        this.parent = parent;
+
+        this.slot_container = new PIXI.Container();
+        this.slot_container.position.set(x, y);
+        this.parent.addChild(this.slot_container);
+
+        // slot frame 
+
+        this.slot_sprite = new PIXI.Sprite(slot_texture);
+        this.slot_sprite.position.set(0, 0);
+        this.slot_container.addChild(this.slot_sprite);
+
+        // Item place
+
+        this.item = null;
+    }
+
+    show_item(){
+        this.slot_container.addChild(this.item.item_sprite);
+    }
+
+    hide_item(){
+        this.slot_container.removeChild(this.item.item_sprite);
+    }
+
+    add_item(item){
+        this.item = item;
+        this.item.parent_slot = this;
+        this.show_item();
+    }
+
+    remove_item(){
+        this.item.parent_slot = null;
+        this.item = null;
+    }
+}
+
 export class SpaceShip {
-    constructor(app, spaceship_shape, pixel_size, Graphics){
+    constructor(game, app, spaceship_shape, pixel_size, Graphics){
+        this.game = game;
 
         //------------------------------------------------------------------------------------------------
         // Game variables
         //------------------------------------------------------------------------------------------------
 
-        this.crew_size = 5;
+        this.crew_size = this.game.crew_size;
         this.engine_status = false;
         this.active = true;
         this.is_on_map_mode = false;
@@ -131,7 +343,9 @@ export class SpaceShip {
         this.app = app;
         this.Graphics = Graphics;
         this.pixel_size = pixel_size;
+
         this.reactors = new Array();
+        this.slots = new Array();
 
         // Mini_Spaceship_container
 
@@ -157,9 +371,12 @@ export class SpaceShip {
         for (var i = 0 ; i < spaceship_shape.length ; i++){
             for (var j = 0 ; j < spaceship_shape[i].length ; j++){
                 if (spaceship_shape[i][j] == 1){
-                    var newSlot = new PIXI.Sprite(newSlot_texture);
-                    this.spaceship_container.addChild(newSlot);
-                    newSlot.position.set(j * this.slot_size, i * this.slot_size);
+                    var newSlot = new Slot( this.spaceship_container, 
+                                            j * this.slot_size, 
+                                            i * this.slot_size,
+                                            newSlot_texture );
+
+                    this.slots.push(newSlot);
                 }
                 else if (spaceship_shape[i][j] == 2){
                     var newReactor = new PIXI.Sprite(newReactor_texture);
@@ -169,6 +386,7 @@ export class SpaceShip {
                 }
             }
         }
+
         this.spaceship_container.pivot.set(spaceship_shape[0].length * this.slot_size / 2, spaceship_shape.length * this.slot_size / 2);
         this.spaceship_container.position.set(pixel_size * 200, pixel_size * 120);
         this.spaceship_container.scale.set(pixel_size, pixel_size);
@@ -298,36 +516,6 @@ export class SpaceShip {
         
     }
 
-}
-
-export class Find_Slot_Bar {
-    constructor(parent, number_of_slot, pixel_size){
-        this.slot_size = 24;
-        this.parent = parent;
-        this.number_of_slot = number_of_slot;
-
-        this.find_slot_bar_container = new PIXI.Container();
-        const newSlot_texture = PIXI.Texture.from('../images/spaceship/slot_2.png');
-        
-        for (var i = 0 ; i < number_of_slot ; i++){
-            const newSlot = new PIXI.Sprite(newSlot_texture);
-            newSlot.position.set((i * this.slot_size + 200), 200);
-            this.find_slot_bar_container.addChild(newSlot);
-        }
-
-        this.find_slot_bar_container.scale.set(pixel_size, pixel_size);
-        this.parent.addChild(this.find_slot_bar_container);
-
-        
-    }
-
-    show(){
-        this.parent.addChild(this.find_slot_bar_container);
-    }
-
-    hide(){
-        this.parent.removeChild(this.find_slot_bar_container);
-    }
 }
 
 class Reactor_spark{
@@ -742,33 +930,32 @@ export class Map {
 
 // Game ---------------------------------------------------------------------------------------------------------------------------------
 
-/*
 export class Game {
     constructor (){
         // get server info
 
-        this._x =
-        this._y = 
-        this.velocity = 
-        this.direction = 
+        this.velocity = 5;
+        this.direction = 0;
 
         // info
 
-        this.Space_Objects_array = 
-        this.Players_array = 
+        this.Space_Objects_array = [];
+        this.Players_array = [];
 
         // stat
 
-        this.spaceship_health = 
-        this.spaceship_fuel = 
-        this.crew_size =
-        this.crew_food = 
-        this.crew_well_being = 
+        this.spaceship_health = 0.9;
+        this.spaceship_fuel = 0.8;
+        this.crew_size = 4;
+        this.crew_food = 0.7;
+        this.crew_well_being = 0.6;
     }
 
     fetch_data(){
         // fetch all 30 secondes
     }
-}
 
-*/
+    push_data(){
+        // push at all changement
+    }
+}
